@@ -1,0 +1,68 @@
+# Hack the Arts — Project Journal
+
+Every change to this project is logged here: edits (with date + time), ideas added, ideas shortlisted, ideas omitted, and decisions with reasons. Newest entries at the bottom of each section.
+
+---
+
+## Decision Log
+
+| Date | Time | Type | Entry |
+|------|------|------|-------|
+| 2026-07-10 | 15:01 IST | setup | Journal created. Rule established: all edits, ideas, shortlists, omissions must be logged here with date + time. |
+| 2026-07-10 | 22:57 IST | **LOCKED** | Revised concept locked per council: ONE experience — anonymous journal → 3-word arc confirm → triptych painting forms while words visibly dissolve into pigment → kin-wall of real people present (room-as-corpus via QR) + "leave a light" ritual → communal mural climax. Song mode cut (stroke engine reused for arc animation). Crisis resource card required. Honest privacy claim ("we never store your words"). Name TBD — Sonder rejected. Written to README.md. |
+| 2026-07-10 | 22:50 IST | council | 5-lens council reviewed "Sonder" (hackathon-judge 7.5, artist 6.5, engineer 7.5, product-ux 7.5, skeptic 5.5 — mean 6.9). Unanimous verdict: MODIFY, no lens preferred an alternative idea. Required changes: (1) CUT song mode as live feature — reuse its timed-brushstroke engine to animate the journal arc; (2) kill fake kin-wall — the ROOM is the corpus: audience QR journal entries feed both kin-wall and mural, so matched strangers are real people present ("someone three rows behind you felt this too"); (3) arc must be structurally legible — deterministic left-to-right/triptych composition with AI as texture inside controlled layout, diffusion cannot compose spatial sequences alone; (4) privacy claim must be true — client-side emotion extraction or honest "we never store your words" + PERFORM deletion on screen (journal words visibly dissolve into pigment as painting forms); (5) demo failure engineering — local p5.js particle layer as guaranteed baseline, cached fallback paintings, repaint threshold ~8, judge speaks entry instead of typing, troll filter on room inputs; (6) crisis handling — self-harm signals swap kin-wall for resource card; (7) RENAME — "Sonder" wellbeing app already exists in same category. |
+
+## Ideas — Added
+
+| Date | Time | Idea | Source |
+|------|------|------|--------|
+| 2026-07-10 | 15:07 IST | **Living Paintings** — upload any painting → AI builds mood/emotion moodboard → Higgsfield animates it per mood → "re-animate" gives new animation but mood stays locked (artist's mood respected) | user |
+| 2026-07-10 | 15:07 IST | **Collective Canvas** — one evolving mural painted by aggregate live emotions of all visitors (text/voice/webcam input); timeline scrubber replays the day's emotional history | claude |
+| 2026-07-10 | 15:07 IST | **Synesthesia Engine** — cross-modal translation: painting → generated soundtrack, song → generated painting; art you can hear / music you can see | claude |
+| 2026-07-10 | 15:07 IST | **Art Telephone** — artwork mutates through a chain of strangers, each sees only the previous iteration and adds one prompt mutation; gallery shows the drift | claude |
+| 2026-07-10 | 15:07 IST | **Ephemeral Art** — generated artwork decays in real time unless people visit/tend it; digital-tamagotchi art, comment on attention economy | claude |
+| 2026-07-10 | 15:07 IST | **Data Portraits** — personal data (steps, sleep, typing rhythm) rendered as abstract self-portrait | claude |
+| 2026-07-10 | 15:07 IST | **Impossible Collaborations** — pick two artists (any era) + subject → AI stages their argument over the piece and paints the compromise; the dialogue is part of the art | claude |
+| 2026-07-10 | 15:07 IST | **Geo-Graffiti** — AR artworks anchored to GPS coords, visible only through phone at the spot; invisible city-wide exhibition | claude |
+| 2026-07-10 | 15:07 IST | **Biometric Brush** — live breathing/heart-rate (mic/webcam) drives generative brushstrokes; meditation art from body signals | claude |
+| 2026-07-10 | 15:07 IST | **Portrait of Today** — one canvas repainted daily from the collective mood of world news; archive becomes emotional history of the world | claude |
+| 2026-07-10 | 15:07 IST | **Voice Sculpture** — spoken words' waveform becomes 3D sculpture (Higgsfield generate_3d), printable | claude |
+| 2026-07-10 | 15:07 IST | **Merge candidates** — (A) Living Paintings + Synesthesia = paintings that move AND sing, mood-locked; (B) Living Paintings + Collective Canvas = gallery whose animated paintings feed one communal mural; (C) Collective Canvas + Portrait of Today = live collective emotional portrait | claude |
+| 2026-07-10 | 15:16 IST | **Mood Journal Paintings** — anonymous journal about your day → AI extracts emotional arc → painting of your whole day (not one mood, the sequence) → see paintings of strangers who feel the same | user |
+| 2026-07-10 | 15:16 IST | **"Sonder" merged concept** — one emotion→art engine, three inputs: journal (personal), crowd (communal), song (musical). Anti-social-network: no profiles, no likes, no text shown — only paintings and emotional kinship | claude |
+| 2026-07-10 | 22:57 IST | **Name candidates** — Felt, Undertone, Wavelength, Tinge, Same Blue, Inklings, Kindred (Sonder rejected; decision pending) | claude |
+| 2026-07-10 | 23:14 IST | **LOCKED (user)** | Architecture Approach A: server-centric Next.js monolith — /api/journal (arc extraction, text RAM-only never persisted), /api/paint (3 parallel panels via provider abstraction), /api/kin (cosine match on 8-dim emotion vector), Supabase Realtime for live museum/mural updates, all safety (crisis check, rate limit, troll filter) at server choke point. Borrows C's trick: words-dissolve animation = loading state (8–12s covers gen latency); gen failure resolves to particle-painting fallback, never an error screen. Approach B (client-direct Gemini) rejected: exposed key + bypassable crisis check on public repo. |
+| 2026-07-10 | 23:13 IST | **LOCKED (user)** | Stack: Next.js + React, React Three Fiber for museum, Next API routes for server-side keys, Supabase free tier (corpus + realtime), Vercel deploy. |
+| 2026-07-10 | 23:11 IST | **LOCKED (user)** | Constraints: SOLO build, 1–2 week runway. Image-gen strategy: DUAL BACKEND — provider abstraction `generatePanel(emotion, palette, style)`; Gemini free tier default for hosted/public (IP rate limit + daily cap + "museum is resting" quota state); Higgsfield backend behind env flag for user's own demo-video/GIF recording (best quality where judges look first). Keys server-side only, `.env.example` for cloners. Rationale: hosted app burns owner's quota on EITHER provider — Gemini free tier makes public use costless; Higgsfield credits reserved for private recording. |
+| 2026-07-10 | 23:06 IST | **LOCKED (user)** | Form factor C: hybrid — 2D journal flow → 3D night-museum gallery on rails (one room + lobby mural wall, React Three Fiber, click-to-dolly, no WASD). 2D CSS gallery-wall fallback if 3D slips. Async-judging insight: every judge who tries hosted app joins corpus — later judges see earlier judges' paintings. README GIF + 2-min video + Vercel link mandatory. |
+| 2026-07-10 | 23:04 IST | **NEW CONSTRAINT (user)**: final project submitted via GitHub — judges judge from the repo (async), not only live booth. Form-factor question opened: 2D web app vs 3D museum vs hybrid | user |
+| 2026-07-10 | 23:04 IST | **Form-factor options** — (A) 2D web app: judges click hosted link, journal, get painting; every judge's entry joins corpus so later judges see earlier judges' paintings — async version of room-as-corpus. (B) Full 3D walkable museum (Three.js): wings organized by emotion (hall of melancholy, wing of joy), your painting hung beside your kin — kinship as literal spatial adjacency; mural = lobby wall; leave-a-light = candle under painting; museum grows with every visitor. (C) HYBRID: 2D intimate journal flow → camera flies into 3D night-museum on rails (no WASD walking), painting hangs itself beside kin. (D) regardless: killer README + GIFs + 2-min demo video mandatory since judges start at repo | claude |
+| 2026-07-10 | 23:00 IST | **Display concepts** — two-surface model (phone=private journal/triptych/kin-wall, projector=communal mural full-bleed no chrome); museum-at-night aesthetic (dark charcoal, paintings only color source, serif gallery-plaque captions showing arc words + time, never names); words-dissolve = letters detach into emotion-colored particles flying into forming triptych; ONE CONTINUOUS ZOOM principle (word→pigment→panel→triptych→tile→mural — your painting visibly becomes one tile of the mural, zoom-out IS the thesis); ambient gallery mode between uses (Ken Burns pan over recent triptychs, booth never dead); constellation kin-wall alternative (entries as stars on valence×arousal sky, kin = near stars, lines draw briefly); mural timeline scrubber replaying evening's emotional history; end-of-night poster export (final mural + strip of arc sequences) as physical takeaway; booth staging: dim lights, QR table tents "Tell this wall about your day" | claude (user prompt: how to display) |
+| 2026-07-10 | 22:50 IST | **Council improvements**: words-dissolve-into-pigment deletion animation (artist); triptych/temporal arc composition, AI as pigment not painter (artist+engineer); arc-confirmation beat "we heard: anxious/lifted/lonely — yes that's my day" (ux); palette-echo morph visually proving kinship match (ux); "leave a light" anonymous ritual — tap adds glow to stranger's painting, no identity/reply/count (ux); animated brushstroke replay of the day reusing song-mode stroke engine (skeptic); crisis resource card (skeptic) | council |
+
+## Ideas — Shortlisted
+
+| Date | Time | Idea | Reason |
+|------|------|------|--------|
+| 2026-07-10 | 15:16 IST | **Mood Journal Paintings** (user, new) — anonymous day-journaling → painting of the emotional arc of your day → matched with paintings of strangers who feel the same | User's pick; most meaningful; emotion-kinship via art = unseen |
+| 2026-07-10 | 15:16 IST | **Collective Canvas** — communal mural painted by aggregate crowd emotion | User liked; best live-demo moment (room paints itself during pitch) |
+| 2026-07-10 | 15:16 IST | **Synesthesia (song → painting)** — temporal version: painting performs itself over the song, freezes as final artwork | User liked; energy in pitch room; needs temporal twist to feel new |
+| 2026-07-10 | 15:16 IST | **MERGE: "Sonder"** — one emotion→art engine, three lenses: journal-painting + kin matching, communal mural, song mode | All three share one engine; coherent thesis "feelings become paintings" |
+
+## Ideas — Omitted
+
+| Date | Time | Idea | Reason |
+|------|------|------|--------|
+| 2026-07-10 | 15:16 IST | Art Telephone, Ephemeral Art, Data Portraits, Impossible Collaborations, Geo-Graffiti, Biometric Brush, Portrait of Today, Voice Sculpture | Parked round 2 — user selected communal + synesthesia + mood-journal direction. Not deleted; revisit if direction stalls. |
+| 2026-07-10 | 15:16 IST | Living Paintings (original: animate uploaded painting via Higgsfield) | Mood-extraction concept absorbed into Mood Journal Paintings; animation-of-existing-art aspect parked (crowded space) |
+| 2026-07-10 | 22:50 IST | Song mode as live feature | Council unanimous cut — polish sink, separate music-visualizer genre, makes project read as feature pile. Stroke-replay engine survives inside journal arc animation; optional 15s pre-rendered clip as pitch encore. |
+| 2026-07-10 | 22:50 IST | Name "Sonder" | Existing Sonder wellbeing app, same category — trademark risk (skeptic). New name needed. |
+| 2026-07-10 | 22:50 IST | Pre-seeded/synthetic kin-wall | Fake strangers = rigged emotional climax, discovered in Q&A = pitch collapse. Replaced by room-as-corpus. |
+
+## Edit Log
+
+| Date | Time | File(s) | Change |
+|------|------|---------|--------|
+| 2026-07-10 | 15:01 IST | JOURNAL.md | Created journal file. |
+| 2026-07-10 | 22:57 IST | README.md | Created — locked concept, hard requirements, pitch arc, build priority, naming status. |
+| 2026-07-10 | 22:57 IST | JOURNAL.md | Logged concept lock + name candidates. |
