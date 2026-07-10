@@ -65,4 +65,8 @@ Every change to this project is logged here: edits (with date + time), ideas add
 |------|------|---------|--------|
 | 2026-07-10 | 15:01 IST | JOURNAL.md | Created journal file. |
 | 2026-07-10 | 22:57 IST | README.md | Created — locked concept, hard requirements, pitch arc, build priority, naming status. |
+| 2026-07-10 | 23:06 IST | README.md | Added form-factor section (hybrid 2D→3D museum on rails, async GitHub judging). |
+| 2026-07-10 | 23:19 IST | docs/superpowers/specs/2026-07-10-emotion-museum-design.md | Design spec written (concept, locked decisions, architecture A, schema, components, safety, no-error-screens policy, testing, build priority). Self-review: palette column ambiguity fixed (assigned at composition, not sampled). |
+| 2026-07-10 | 23:19 IST | git | Repo initialized, first commit 6916ca8 (README, JOURNAL, spec). |
+| 2026-07-10 | 23:34 IST | docs/superpowers/plans/2026-07-10-emotion-museum.md | Implementation plan written: 14 TDD tasks (scaffold → emotion lib → supabase → extraction → journal API → providers → paint/kin/light APIs → 2D flow → dissolve/triptych → 3D museum → mural/lights/transition → fallbacks/about → seed/E2E → deploy/README). Self-review: full spec coverage, no placeholders, types consistent. |
 | 2026-07-10 | 22:57 IST | JOURNAL.md | Logged concept lock + name candidates. |
