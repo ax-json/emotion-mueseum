@@ -1,5 +1,5 @@
 'use client'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ArcBeat } from '@/lib/emotion'
 import { getSessionId } from '@/lib/session'
 
@@ -10,7 +10,9 @@ export default function JournalScreen({ onArc, onCrisis, onResting }: {
   const [listening, setListening] = useState(false)
   const recRef = useRef<{ stop: () => void } | null>(null)
   /* eslint-disable @typescript-eslint/no-explicit-any */
-  const SR = typeof window !== 'undefined' ? ((window as any).webkitSpeechRecognition || (window as any).SpeechRecognition) : null
+  const [SR, setSR] = useState<any>(null)
+  // resolved post-mount so SSR and first client paint match (no hydration mismatch)
+  useEffect(() => { setSR(() => (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition || null) }, [])
 
   function toggleMic() {
     if (listening) { recRef.current?.stop(); setListening(false); return }
