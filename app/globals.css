@@ -1,0 +1,5 @@
+:root { --bg:#0e0d0b; --ink:#e8e2d6; --dim:#8d8578; --accent:#c9a86a; --serif:"Georgia","Times New Roman",serif; }
+* { box-sizing:border-box; margin:0; }
+body { background:var(--bg); color:var(--ink); font-family:var(--serif); min-height:100dvh; }
+button { font:inherit; cursor:pointer; }
+.plaque { font-style:italic; color:var(--dim); letter-spacing:.06em; }
