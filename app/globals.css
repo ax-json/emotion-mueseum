@@ -4,3 +4,9 @@ body { background:var(--bg); color:var(--ink); font-family:var(--serif); min-hei
 button { font:inherit; cursor:pointer; }
 .plaque { font-style:italic; color:var(--dim); letter-spacing:.06em; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px) } to { opacity: 1 } }
+@keyframes shrinkAway { to { transform: scale(0.18) translateY(-30vh); opacity: 0 } }
+@keyframes fadeInSlow { from { opacity: 0 } to { opacity: 1 } }
+@media (prefers-reduced-motion: reduce) {
+  .museum-enter { animation-duration: .4s !important; }
+  .triptych-ghost { animation-duration: .4s !important; }
+}

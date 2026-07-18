@@ -1,9 +1,10 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Text } from '@react-three/drei'
+import { Html, Text } from '@react-three/drei'
 import * as THREE from 'three'
 import { drawParticlePainting, seedFrom } from '@/components/particle-draw'
+import { getSessionId } from '@/lib/session'
 import type { PaintingRow } from './GalleryRoom'
 
 const PANEL = 0.5, GAP = 0.04
@@ -59,7 +60,18 @@ export default function PaintingFrame({ painting, position, isFocused, onFocus }
   const when = new Date(painting.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   const plaque = `${painting.is_seed ? 'founding collection · ' : ''}${painting.arc_words.join(' · ')} · ${when}`
   const width = PANEL * 3 + GAP * 2
-  const orbs = Math.min(painting.lights, MAX_LIGHT_ORBS)
+  const [litHere, setLitHere] = useState(false)
+  const orbs = Math.min(painting.lights + (litHere ? 1 : 0), MAX_LIGHT_ORBS)
+
+  async function leaveLight() {
+    if (litHere) return
+    setLitHere(true)                                  // optimistic — never show failure (spec §7)
+    const res = await fetch('/api/light', {
+      method: 'POST', headers: { 'content-type': 'application/json', 'x-session-id': getSessionId() },
+      body: JSON.stringify({ paintingId: painting.id }),
+    }).then(r => r.json()).catch(() => null)
+    if (res && res.ok === false) setLitHere(true)     // cap reached / repeat → still reads "yours here"
+  }
   return (
     <group ref={group} position={[position.x, position.y, position.z]}
       onClick={e => { e.stopPropagation(); onFocus() }}>
@@ -83,6 +95,14 @@ export default function PaintingFrame({ painting, position, isFocused, onFocus }
         </mesh>
       ))}
       {isFocused && <FrameSpot y={0} />}
+      {isFocused && (
+        <Html center distanceFactor={2} position={[0, -PANEL / 2 - 0.34, 0.05]}>
+          <button onClick={leaveLight} disabled={litHere}
+            style={{ background: 'none', border: '1px solid #c9a86a', color: '#c9a86a', padding: '.3rem .8rem', font: 'italic 13px Georgia, serif', whiteSpace: 'nowrap', opacity: litHere ? 0.7 : 1 }}>
+            {litHere ? 'a light is yours here' : 'leave a light'}
+          </button>
+        </Html>
+      )}
     </group>
   )
 }

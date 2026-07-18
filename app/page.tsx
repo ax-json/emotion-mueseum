@@ -6,6 +6,7 @@ import JournalScreen from '@/components/JournalScreen'
 import ArcConfirm from '@/components/ArcConfirm'
 import DissolveCanvas from '@/components/DissolveCanvas'
 import TriptychReveal from '@/components/TriptychReveal'
+import MuseumScene from '@/components/museum/MuseumScene'
 
 type Phase = 'journal' | 'confirm' | 'dissolve' | 'reveal' | 'museum' | 'crisis' | 'resting'
 const MIN_DISSOLVE_MS = 8000
@@ -81,14 +82,22 @@ export default function Home() {
   if (phase === 'reveal' && painting) return (
     <main><TriptychReveal painting={painting} onEnterMuseum={() => setPhase('museum')} /></main>
   )
-  if (phase === 'museum') return (
-    <main style={{ display: 'grid', placeItems: 'center', minHeight: '100dvh', textAlign: 'center' }}>
-      <div>
-        <p className="plaque" style={{ marginBottom: '1.2rem' }}>your painting is finding its wall…</p>
-        <a href="/museum" style={{ color: 'var(--accent)' }}>walk the halls →</a>
-      </div>
-    </main>
-  )
+  if (phase === 'museum' && painting) {
+    const isLocal = String(painting.id).startsWith('local-')
+    return (
+      <main>
+        <div className="museum-enter" style={{ animation: 'fadeInSlow 1.8s ease both' }}>
+          <MuseumScene highlightId={isLocal ? undefined : String(painting.id)} />
+        </div>
+        <div className="triptych-ghost" style={{ position: 'fixed', inset: 0, animation: 'shrinkAway 1.8s ease forwards', pointerEvents: 'none', zIndex: 2 }}>
+          <TriptychReveal painting={painting} onEnterMuseum={() => {}} />
+        </div>
+        <p className="plaque" style={{ position: 'fixed', bottom: '1rem', width: '100%', textAlign: 'center', zIndex: 2 }}>
+          {isLocal ? 'your painting lives on this device tonight' : 'your painting has found its wall'}
+        </p>
+      </main>
+    )
+  }
   if (phase === 'crisis') return <main><ResourceCard /></main>
   return (
     <main style={{ display: 'grid', placeItems: 'center', minHeight: '100dvh', textAlign: 'center' }}>

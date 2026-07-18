@@ -5,6 +5,7 @@ import { wallPosition } from '@/lib/emotion'
 import { seedFrom } from '@/components/particle-draw'
 import PaintingFrame from './PaintingFrame'
 import RailsCamera from './RailsCamera'
+import MuralWall from './MuralWall'
 
 export interface PaintingRow {
   id: string; created_at: string; arc_words: string[]; emotion_vec: number[]
@@ -54,6 +55,7 @@ export default function GalleryRoom({ highlightId }: { highlightId?: string }) {
           isFocused={focus?.id === p.id}
           onFocus={() => setFocus(p)} />
       ))}
+      <MuralWall paintings={paintings} />
       <RailsCamera focusTarget={focusTarget} />
     </group>
   )
