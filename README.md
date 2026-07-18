@@ -1,50 +1,73 @@
-# Hack the Arts — [Name TBD]
+# Emotion Museum
 
-**Theme:** Create art that couldn't exist without technology.
-**Status:** Concept locked 2026-07-10 (council-reviewed, 5-lens panel, unanimous MODIFY → revised). Full history in [JOURNAL.md](JOURNAL.md).
+> *Technology gets blamed for making us lonely. We used it to let strangers find each other through feelings, not faces.*
 
-## Concept (locked)
+<!-- HERO GIF: docs/demo/museum-pan.gif — record with IMAGE_PROVIDER=higgsfield before submission -->
+![museum pan](docs/demo/museum-pan.gif)
 
-An anonymous emotional-kinship artwork. People journal about their day; their feelings become paintings; the paintings find them strangers who felt the same — no names, no likes, no text ever shown. The whole room's feelings fuse into one communal mural that has never existed before and will never exist again.
+Tell the museum about your day. An AI reads the emotional arc — three plain words you can correct — and paints it as a triptych while your words visibly dissolve into the pigment. Your painting then hangs in a shared 3D night-museum **beside strangers who felt the same**, matched on an 8-dimension emotion fingerprint, never on text. You can leave an anonymous light under a stranger's painting. Every visitor's feelings also feed one communal mural that has never existed before and will never exist again.
 
-**One experience, one flow:**
+**Visit the museum:** `https://YOUR-DEPLOYMENT.vercel.app` *(link goes live at submission — the magic is reachable in under 60 seconds: write three honest lines, watch them become paint)*
 
-1. **Journal** — user (or audience member via QR) anonymously writes/speaks a few lines about their day.
-2. **Arc confirm** — AI extracts the day's emotional arc as three plain words ("anxious / lifted / lonely"), one tap to confirm or edit. Gives authorship, rescues misreads.
-3. **Painting** — triptych composition: each emotional beat owns a panel (deterministic layout, AI paints texture/palette inside it — AI as pigment, not painter). Panels generate in parallel. As the painting forms, the journal's words **visibly dissolve into the pigment** — deletion performed, not claimed.
-4. **Kin-wall** — emotion vector (valence/arousal axes, not topic embeddings) matches you with anonymous people *physically present* — the audience's own QR entries are the corpus. Palette-echo animation shows the shared color between your painting and your kin's ("you both had the same blue"). One ritual action: **leave a light** — anonymous tap adds a small glow to a stranger's painting.
-5. **Communal mural** — every entry feeds a live room-scale mural. Local p5.js particle layer reacts instantly (works offline); AI repaints emotion-clustered tiles every ~8 contributions.
+**2-minute demo video:** `docs/demo/demo.mp4` *(recording pending)*
 
-## Form factor (locked 2026-07-10)
+Every judge who tries the app joins the corpus — later judges see earlier judges' paintings hanging in the halls.
 
-**Hybrid:** 2D journal flow (intimate, phone-friendly) → camera flies into a **3D night-museum gallery on rails** (React Three Fiber; one emotion-room + lobby mural wall; click-to-dolly, no WASD walking). Your painting glides onto the wall beside your emotional kin — kinship as spatial adjacency. Leave-a-light = small glow under a stranger's painting.
-- Fallback if 3D slips: 2D CSS parallax gallery wall (80% of feel, 20% of work).
-- **Judging is async via GitHub**: every judge who tries the hosted app joins the corpus — later judges see earlier judges' paintings. Repo must have: README GIF of the museum, 2-min demo video, one-click Vercel link (magic reachable in <60s).
+## How it works
 
-## Hard requirements (from council)
+```
+you write (or speak) 3 honest lines
+        │  analyzed in memory — never stored, never logged
+        ▼
+emotional arc: "anxious · lifted · lonely"   ← one tap to correct
+        │
+        ▼
+3 panels painted in parallel (Gemini image / Higgsfield / particle fallback)
+your words dissolve into the pigment while the paint dries
+        │
+        ▼
+3D night-museum: valence → left/right wall, arousal → hanging height
+your emotional kin (cosine similarity) hang beside you
+        │
+        ▼
+leave a light · communal mural grows with every entry (Supabase Realtime)
+```
 
-- **No fake strangers.** Kin matches are real, present people. Never seed synthetic entries as "users."
-- **Honest privacy:** "we never store your words" (not "words deleted"). Client-side extraction where possible.
-- **Crisis handling:** self-harm signals swap kin-wall for a gentle resource card. Non-negotiable.
-- **Demo armor:** local particle layer as guaranteed baseline, cached fallback paintings, judge speaks entry (no live typing), troll filter + rate limit on room inputs.
-- **Song mode: CUT** as live feature. Timed-brushstroke engine reused to animate the journal painting; optional 15s pre-rendered clip as pitch encore.
+**There is no column for your words.** The database stores only: three feeling-words, an 8-float emotion vector, valence/arousal, panel image URLs, and a salted session hash. Nothing else exists to leak.
 
-## Pitch arc (3 min)
+## Safety
 
-1. Cold open: "Technology gets blamed for making us lonely. We used it to let strangers find each other through feelings, not faces."
-2. Judge speaks a 3-line journal → arc confirm → triptych forms, words dissolve.
-3. Kin-wall reveal: "someone three rows behind you felt this too."
-4. Zoom out: the room's mural, morphing live.
-5. Close: "No accounts. No likes. We never store your words — only color remains."
+- **Crisis handling** — entries signaling self-harm swap the painting flow for a gentle helpline card (iCall, AASRA, findahelpline.com). Non-negotiable, server-side.
+- **No fake strangers** — the first 15 paintings are the builder's own days, plaqued "founding collection". Kin matches are always real entries.
+- **No error screens** — every failure resolves to art: generation fails → deterministic particle painting; DB down → your painting lives on your device tonight; daily cap hit → "the museum is resting."
+- **Rate limits** — 3 paintings/hour per session, 20 lights/day, global daily cap.
+- **Abuse filter** — hate/spam classified server-side and quietly declined.
 
-## Build priority
+## Run it locally
 
-1. Journal → arc → triptych painting (core)
-2. Kin matching + kin-wall + leave-a-light (soul)
-3. Room QR intake + communal mural (climax)
-4. Words-dissolve animation, palette-echo, polish
-5. (encore only) pre-rendered song-mode clip
+```bash
+npm install
+cp .env.example .env.local        # fill in your keys
+npm run dev                       # http://localhost:3000
+```
 
-## Naming
+- `GEMINI_API_KEY` — arc extraction (gemini-2.5-flash) + default painter (gemini-2.5-flash-image)
+- `IMAGE_PROVIDER=gemini | higgsfield | mock` — painter backend; `mock` needs no keys
+- Supabase: run `supabase/schema.sql`, create public storage bucket `panels`, enable Realtime on `paintings`
+- `MOCK_AI=1 IMAGE_PROVIDER=mock npm run dev` — full journey with zero keys (deterministic mock arc + 1×1 panels)
 
-"Sonder" rejected — existing wellbeing app, same category. Candidates under discussion — see JOURNAL.md.
+```bash
+npm test              # 24 unit tests (vitest)
+npx playwright test   # E2E: full journey + crisis path
+node scripts/seed.mjs # hang the founding collection
+```
+
+## Stack
+
+Next.js 15 (App Router) · React 19 · React Three Fiber + drei · Supabase (Postgres, Storage, Realtime) · Gemini + Higgsfield behind a provider abstraction · hand-rolled CSS, museum-at-night. All AI and safety at server choke points; keys never reach the client; RLS is read-only public.
+
+## Process
+
+This was built with every idea, decision, and dead end logged in real time — see [JOURNAL.md](JOURNAL.md) for the full history: the 10-idea longlist, the council review that cut song-mode and banned synthetic strangers, the form-factor debate, and the build log.
+
+License: [MIT](LICENSE)
