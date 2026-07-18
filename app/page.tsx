@@ -1,14 +1,18 @@
 'use client'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { paletteFor, type ArcBeat } from '@/lib/emotion'
 import { getSessionId } from '@/lib/session'
 import JournalScreen from '@/components/JournalScreen'
 import ArcConfirm from '@/components/ArcConfirm'
+import DissolveCanvas from '@/components/DissolveCanvas'
+import TriptychReveal from '@/components/TriptychReveal'
 
 type Phase = 'journal' | 'confirm' | 'dissolve' | 'reveal' | 'museum' | 'crisis' | 'resting'
 const MIN_DISSOLVE_MS = 8000
 
-// painting shape mirrors /api/paint row; local fallback built client-side when even 'solo' can't reach us
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+// painting shape mirrors /api/paint row; local fallback when even 'solo' can't reach us
 function localPainting(beats: ArcBeat[]) {
   return {
     id: 'local-' + Date.now(), arc_words: beats.map(b => b.word),
@@ -38,20 +42,24 @@ export default function Home() {
   const [phase, setPhase] = useState<Phase>('journal')
   const [beats, setBeats] = useState<ArcBeat[]>([])
   const [rawText, setRawText] = useState('')
-  const [painting, setPainting] = useState<Record<string, unknown> | null>(null)
+  const [painting, setPainting] = useState<any>(null)
+  const [paintDone, setPaintDone] = useState(false)
+  const paintRes = useRef<any>(null)
 
-  async function handleConfirm(edited: ArcBeat[]) {
+  function handleConfirm(edited: ArcBeat[]) {
     setBeats(edited)
-    const promise = fetch('/api/paint', {
+    setPaintDone(false)
+    fetch('/api/paint', {
       method: 'POST', headers: { 'content-type': 'application/json', 'x-session-id': getSessionId() },
       body: JSON.stringify({ beats: edited }),
-    }).then(r => r.json()).catch(() => null)
+    }).then(r => r.json()).catch(() => null).then(res => { paintRes.current = res; setPaintDone(true) })
     setPhase('dissolve')
-    const [res] = await Promise.all([promise, new Promise(r => setTimeout(r, MIN_DISSOLVE_MS))])
-    if (res?.status === 'limited') { setPhase('resting'); return }   // gentle copy reused; no error UI ever
-    if (res?.status === 'resting') { setPhase('resting'); return }
-    const p = res?.painting ?? localPainting(edited)
-    setPainting(p)
+  }
+
+  function handleDissolveFinished() {
+    const res = paintRes.current
+    if (res?.status === 'limited' || res?.status === 'resting') { setPhase('resting'); return }  // no error UI ever
+    setPainting(res?.painting ?? localPainting(beats))
     setPhase('reveal')
   }
 
@@ -66,30 +74,12 @@ export default function Home() {
   )
   if (phase === 'confirm') return <main><ArcConfirm beats={beats} onConfirm={handleConfirm} /></main>
   if (phase === 'dissolve') return (
-    <main style={{ display: 'grid', placeItems: 'center', minHeight: '100dvh' }}>
-      <p className="plaque">the paint is drying…</p>
+    <main>
+      <DissolveCanvas text={rawText} beats={beats} minMs={MIN_DISSOLVE_MS} done={paintDone} onFinished={handleDissolveFinished} />
     </main>
   )
   if (phase === 'reveal' && painting) return (
-    <main style={{ maxWidth: 900, margin: '10vh auto 0', padding: '0 1.2rem', textAlign: 'center' }}>
-      <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-        {[0, 1, 2].map(i => (
-          <figure key={i} style={{ width: 'min(260px, 80vw)' }}>
-            <div style={{ aspectRatio: '1', border: '10px solid #2a241c', background: (painting.palette as string[][])[i]?.[0] ?? '#12100d' }}>
-              {(painting.panel_urls as string[])[i] && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={(painting.panel_urls as string[])[i]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-              )}
-            </div>
-            <figcaption className="plaque" style={{ marginTop: '.5rem' }}>{(painting.arc_words as string[])[i]}</figcaption>
-          </figure>
-        ))}
-      </div>
-      <button onClick={() => setPhase('museum')}
-        style={{ marginTop: '2.4rem', background: 'none', border: '1px solid var(--accent)', color: 'var(--accent)', padding: '.6rem 1.8rem' }}>
-        hang it in the museum
-      </button>
-    </main>
+    <main><TriptychReveal painting={painting} onEnterMuseum={() => setPhase('museum')} /></main>
   )
   if (phase === 'museum') return (
     <main style={{ display: 'grid', placeItems: 'center', minHeight: '100dvh', textAlign: 'center' }}>

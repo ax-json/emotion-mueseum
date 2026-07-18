@@ -3,3 +3,4 @@
 body { background:var(--bg); color:var(--ink); font-family:var(--serif); min-height:100dvh; }
 button { font:inherit; cursor:pointer; }
 .plaque { font-style:italic; color:var(--dim); letter-spacing:.06em; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px) } to { opacity: 1 } }
