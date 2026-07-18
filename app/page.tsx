@@ -7,6 +7,8 @@ import ArcConfirm from '@/components/ArcConfirm'
 import DissolveCanvas from '@/components/DissolveCanvas'
 import TriptychReveal from '@/components/TriptychReveal'
 import MuseumScene from '@/components/museum/MuseumScene'
+import FlatGallery from '@/components/museum/FlatGallery'
+import { hasWebGL } from '@/lib/webgl'
 
 type Phase = 'journal' | 'confirm' | 'dissolve' | 'reveal' | 'museum' | 'crisis' | 'resting'
 const MIN_DISSOLVE_MS = 8000
@@ -87,7 +89,7 @@ export default function Home() {
     return (
       <main>
         <div className="museum-enter" style={{ animation: 'fadeInSlow 1.8s ease both' }}>
-          <MuseumScene highlightId={isLocal ? undefined : String(painting.id)} />
+          {hasWebGL() ? <MuseumScene highlightId={isLocal ? undefined : String(painting.id)} /> : <FlatGallery />}
         </div>
         <div className="triptych-ghost" style={{ position: 'fixed', inset: 0, animation: 'shrinkAway 1.8s ease forwards', pointerEvents: 'none', zIndex: 2 }}>
           <TriptychReveal painting={painting} onEnterMuseum={() => {}} />
