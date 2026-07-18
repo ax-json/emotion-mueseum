@@ -1,0 +1,29 @@
+create table paintings (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  arc_words text[] not null check (array_length(arc_words, 1) = 3),
+  emotion_vec float8[] not null check (array_length(emotion_vec, 1) = 8),
+  valence float8 not null,
+  arousal float8 not null,
+  panel_urls text[] not null,          -- length 3; '' element => client renders ParticlePanel
+  palette jsonb not null,              -- [["#hex","#hex","#hex"] x3] assigned at composition time
+  lights int not null default 0,
+  is_seed boolean not null default false,
+  session_hash text not null
+);
+create index paintings_created_idx on paintings (created_at desc);
+
+create table lights_log (
+  painting_id uuid references paintings(id),
+  session_hash text not null,
+  created_at timestamptz not null default now(),
+  primary key (painting_id, session_hash)
+);
+
+create or replace function increment_lights(pid uuid) returns int language sql as
+$$ update paintings set lights = lights + 1 where id = pid returning lights; $$;
+
+alter table paintings enable row level security;
+alter table lights_log enable row level security;
+create policy "public read paintings" on paintings for select using (true);
+-- no public insert/update policies: all writes go through API routes using the service role
