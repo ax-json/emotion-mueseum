@@ -16,20 +16,24 @@ describe('paintingPrompt — one canvas for the whole evening', () => {
     expect(p).toContain('it opens with')
     expect(p).toContain('it closes with')
   })
-  it('translates every beat into mark-making and carries the palette hexes', () => {
+  it('translates every beat into corruption behaviour and carries the palette hexes', () => {
     const p = paintingPrompt(beats, palettes).toLowerCase()
-    expect(p).toContain('jagged fractured shards')       // fear
-    expect(p).toContain('buoyant upward sweeps')         // joy
-    expect(p).toContain('isolated mark')                 // loneliness
+    expect(p).toContain('compressed static')             // fear
+    expect(p).toContain('light-leaks')                   // joy
+    expect(p).toContain('adrift in a vast empty')        // loneliness
     expect(p).toContain('#4b3a5e'); expect(p).toContain('#d9a441'); expect(p).toContain('#3a4468')
+  })
+  it('anchors the strongest beat as the central subject', () => {
+    const p = paintingPrompt(beats, palettes).toLowerCase()
+    expect(p).toContain('one pale flower alone on a long stem')   // loneliness at 0.8 leads
   })
   it('never names a feeling — feeling words make models paint portraits', () => {
     const p = paintingPrompt(beats, palettes).toLowerCase()
     for (const w of ['anxious', 'fear', 'joy', 'lonely', 'loneliness', 'lifted']) expect(p).not.toContain(w)
   })
-  it('keeps the painterly and faceless constraints', () => {
+  it('keeps the glitch-collage and faceless constraints', () => {
     const p = paintingPrompt(beats, palettes).toLowerCase()
-    expect(p).toMatch(/impasto|gouache|brush/); expect(p).toMatch(/no text/); expect(p).toMatch(/faceless/)
+    expect(p).toMatch(/halftone|pixel-sort|film grain/); expect(p).toMatch(/no readable words/); expect(p).toMatch(/faceless/)
   })
 })
 
@@ -39,12 +43,12 @@ describe('communityPrompt — the monumental communal mural', () => {
     { emotion: 'sadness' as const, weight: 0.3 },
     { emotion: 'love' as const, weight: 0.2 },
   ]
-  it('speaks at mural scale and weaves the top emotions as gestures', () => {
+  it('speaks at mural scale and weaves the top emotions as corruption', () => {
     const p = communityPrompt(top, palettes).toLowerCase()
     expect(p).toContain('monumental')
-    expect(p).toContain('wide still horizontal fields')  // calm leads
-    expect(p).toContain('heavy horizontal bands')        // sadness woven in
-    expect(p).toContain('two warm overlapping masses')   // love undertone
+    expect(p).toContain('wide still negative space')     // calm leads
+    expect(p).toContain('heavy dark banding')            // sadness woven in
+    expect(p).toContain('double-exposed')                // love undertone
   })
   it('never names a feeling and stays faceless', () => {
     const p = communityPrompt(top, palettes).toLowerCase()
@@ -53,7 +57,7 @@ describe('communityPrompt — the monumental communal mural', () => {
   })
   it('survives a field with fewer than three emotions', () => {
     const p = communityPrompt([top[0]], palettes).toLowerCase()
-    expect(p).toContain('wide still horizontal fields')
+    expect(p).toContain('wide still negative space')
     expect(p).not.toContain('undefined')
   })
 })

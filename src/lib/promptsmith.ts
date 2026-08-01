@@ -13,14 +13,24 @@ const MODEL = () => process.env.OPENAI_MODEL || 'gpt-4o-mini'   // pin + overrid
 const MIN_USABLE_CHARS = 60
 const MAX_PROMPT_CHARS = 900
 
-const SYSTEM = `You are the prompt-writer for an art museum that turns private journal entries into abstract paintings.
-Given a diary entry and its emotional arc, write ONE image-generation prompt for a single painting that holds the whole evening.
-Hard rules, all mandatory:
-- Non-representational abstract expressionism only: colour, gesture, texture, composition.
-- NEVER name a feeling or mental state (no "sad", "anxious", "joyful", "lonely" etc.) — image models paint them as faces. Translate feelings into mark-making, movement and colour instead.
-- No people, faces, figures, bodies, eyes; no text, letters or numbers in the image.
-- Painterly language: impasto, knife strokes, dry-brush, washes, canvas grain, gallery lighting.
-- Under 120 words. Reply with the prompt text alone — no quotes, no preamble, no explanations.`
+const SYSTEM = `You are the prompt-writer for a night museum that turns private journal entries into dark glitch-collage poster artworks.
+Given a diary entry and its emotional arc, write ONE image-generation prompt for a single artwork that holds the whole evening.
+
+HOUSE STYLE — every artwork must belong to this school:
+- Dark analogue-collage poster on a near-black ground: layered torn-paper fragments, halftone photocopy texture, film grain, tape, dust, xerox contrast.
+- Digital corruption carries the emotion: pixel-sorting streaks, datamosh smears, scanline tears, RGB channel splits, compression artifacts. Decide from the arc WHERE the image stays whole and WHERE it breaks apart — a gentle evening barely glitches; a violent one is torn to shreds.
+- ONE central subject, chosen from a concrete object, place or moment in the diary (a flower, rain on a window, a train, a phone screen, the night sky, a cup going cold). It is a symbol for the evening — never a literal scene, never an illustration of the writer, never a story.
+- Soft organic beauty versus hard digital decay: let the subject be tender (botanical, celestial, sculptural) and let the corruption eat into it exactly as much as the evening did.
+- One loud chromatic accent against the otherwise muted field — a holographic rainbow smear, acid orange, electric blue — placed where the evening turned.
+- The written prompt MUST explicitly name at least three of these techniques so the image model cannot drift into plain photography: "glitch collage", "pixel-sorting", "datamosh smear", "scanline tears", "RGB channel split", "halftone print fragments", "torn paper collage layers". Heavier evenings use more; even the gentlest evening keeps "glitch collage" and one other.
+
+HARD RULES, all mandatory:
+- NEVER name a feeling or mental state (no "sad", "anxious", "joyful", "lonely" etc.) — image models paint them as faces. Feelings become corruption, composition and colour only.
+- Never quote the diary's words back; transform its imagery instead.
+- Any text-like marks in the artwork must be illegible micro-glyph noise — no readable words, letters or numbers.
+- No recognizable face: human presence only as classical statue fragments, silhouettes, or halftone-shredded anonymous forms.
+- WORD ORDER IS LOAD-BEARING: image models obey the first words most. Open the prompt with the style school ("Experimental glitch art collage poster, corrupted digital graphic design, dark analogue collage…"), then the corruption techniques, and only THEN introduce the central subject mid-prompt, already entangled with the corruption ("buried inside the layered corruption…", "rendered as a xerox photocopy fragment, dissolving into…"). NEVER open with the subject — that produces a clean product photograph.
+- Under 130 words. Reply with the prompt text alone — no quotes, no preamble, no explanations.`
 
 function violates(prompt: string, beats: ArcBeat[]): boolean {
   // The one spec rule worth double-checking by machine: a named feeling reliably becomes a portrait.
@@ -52,6 +62,9 @@ export async function craftPaintingPrompt(text: string, beats: ArcBeat[]): Promi
   if (!key) { console.warn('[promptsmith] OPENAI_API_KEY missing — using local prompt builder'); return null }
 
   const arc = beats.map(b => `${b.word} (${b.emotion}, ${b.intensity.toFixed(2)})`).join(' → ')
+  // The guard below rejects any output containing these — telling the model up front
+  // roughly halves the rejection rate (both live smokes died on a named feeling).
+  const avoid = [...new Set([...EMOTIONS, ...beats.map(b => b.word.toLowerCase())])].join(', ')
   try {
     const res = await fetch(OPENAI_ENDPOINT, {
       method: 'POST',
@@ -61,7 +74,7 @@ export async function craftPaintingPrompt(text: string, beats: ArcBeat[]): Promi
         model: MODEL(),
         messages: [
           { role: 'system', content: SYSTEM },
-          { role: 'user', content: `Diary entry:\n${text}\n\nEmotional arc of the day: ${arc}` },
+          { role: 'user', content: `Diary entry:\n${text}\n\nEmotional arc of the day: ${arc}\n\nForbidden words — never write any of these (or words derived from them) in the prompt: ${avoid}` },
         ],
         temperature: 0.8,
         max_tokens: 260,
