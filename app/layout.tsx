@@ -9,7 +9,7 @@ const body = EB_Garamond({
   subsets: ['latin'], weight: ['400', '500'], style: ['normal', 'italic'], variable: '--font-body',
 })
 
-export const metadata = { title: 'The Emotion Museum', description: 'Your day, hung among strangers who felt the same.' }
+export const metadata = { title: 'Museum of Days', description: 'Your day, hung among strangers who felt the same.' }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

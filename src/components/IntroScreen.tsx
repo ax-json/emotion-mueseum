@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { animate, stagger } from 'animejs'
 
-const TITLE = 'The Emotion Museum'
+const TITLE = 'Museum of Days'
 
 /* Letters rise one by one out of the dark; leaving reverses them upward. anime.js drives both
    so entrance and exit share one motion language. Reduced motion skips straight through. */

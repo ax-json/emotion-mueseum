@@ -1,6 +1,6 @@
 import HomeLink from '@/components/HomeLink'
 
-export const metadata = { title: 'About — The Emotion Museum' }
+export const metadata = { title: 'About — Museum of Days' }
 
 export default function About() {
   return (

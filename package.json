@@ -1,5 +1,5 @@
 {
-  "name": "emotion-museum",
+  "name": "museum-of-days",
   "private": true,
   "scripts": {
     "dev": "WATCHPACK_POLLING=true next dev",

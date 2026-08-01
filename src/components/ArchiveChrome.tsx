@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
    Four fixed corner annotations in the registrar's voice; content swaps per phase.
    Keyed spans re-run the entrance animation when the folio turns. */
 const FOLIO: Record<string, [string, string]> = {
-  intro: ['The Emotion Museum · Nocturnal Register', 'fol. 1'],
+  intro: ['Museum of Days · Nocturnal Register', 'fol. 1'],
   choose: ['Admissions — One Visitor', 'fol. 1 verso'],
   journal: ['Field Notes — Three Lines, Unedited', 'fol. 2'],
   confirm: ['Provisional Reading — Subject to the Night', 'fol. 2 verso'],

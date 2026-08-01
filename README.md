@@ -1,4 +1,4 @@
-# Emotion Museum
+# Museum of Days
 
 > *Technology gets blamed for making us lonely. We used it to let strangers find each other through feelings, not faces.*
 
