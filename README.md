@@ -22,7 +22,7 @@ you write (or speak) 3 honest lines
 emotional arc: "anxious · lifted · lonely"   ← one tap to correct
         │
         ▼
-3 panels painted in parallel (Gemini image / Higgsfield / particle fallback)
+one canvas painted from your evening (Pollinations flux — free · Higgsfield · particle fallback)
 your words dissolve into the pigment while the paint dries
         │
         ▼
@@ -51,20 +51,35 @@ cp .env.example .env.local        # fill in your keys
 npm run dev                       # http://localhost:3000
 ```
 
-- `GEMINI_API_KEY` — arc extraction (gemini-2.5-flash) + default painter (gemini-2.5-flash-image)
-- `IMAGE_PROVIDER=gemini | higgsfield | mock` — painter backend; `mock` needs no keys
+- `IMAGE_PROVIDER=pollinations | higgsfield | together | gemini | mock` — painter backend; `pollinations` is **free and keyless** (the default), `mock` needs no keys at all
+- `GEMINI_API_KEY` — arc extraction (gemini text); optional — keyword fallback covers its absence
+- `OPENAI_API_KEY` — optional prompt-smith; missing key → deterministic local prompt builder
 - Supabase: run `supabase/schema.sql`, create public storage bucket `panels`, enable Realtime on `paintings`
 - `MOCK_AI=1 IMAGE_PROVIDER=mock npm run dev` — full journey with zero keys (deterministic mock arc + 1×1 panels)
 
 ```bash
-npm test              # 24 unit tests (vitest)
-npx playwright test   # E2E: full journey + crisis path
+npm test              # 50 unit tests (vitest)
+npx playwright test   # E2E: full journey + crisis path + 10-scenario dry runs
 node scripts/seed.mjs # hang the founding collection
 ```
 
+## Deploy (Vercel)
+
+Import the GitHub repo into Vercel — zero build config needed (Next.js auto-detected). Set these env vars:
+
+| Variable | Value |
+|---|---|
+| `IMAGE_PROVIDER` | `pollinations` (free, keyless painter) |
+| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | from Supabase project settings |
+| `SUPABASE_SERVICE_ROLE_KEY` | from Supabase (server-only) |
+| `SESSION_SALT` | any long random string |
+| `GEMINI_API_KEY` | optional — richer arc extraction |
+| `OPENAI_API_KEY` | optional — ChatGPT-crafted painting prompts |
+| `DAILY_PAINTING_CAP` | optional, default 150 |
+
 ## Stack
 
-Next.js 15 (App Router) · React 19 · React Three Fiber + drei · Supabase (Postgres, Storage, Realtime) · Gemini + Higgsfield behind a provider abstraction · hand-rolled CSS, museum-at-night. All AI and safety at server choke points; keys never reach the client; RLS is read-only public.
+Next.js 15 (App Router) · React 19 · React Three Fiber + drei · Supabase (Postgres, Storage, Realtime) · Pollinations / Higgsfield / Together / Gemini behind a provider abstraction · hand-rolled CSS, museum-at-night. All AI and safety at server choke points; keys never reach the client; RLS is read-only public.
 
 ## Process
 
