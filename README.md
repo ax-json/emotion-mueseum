@@ -7,7 +7,7 @@
 
 Tell the museum about your day. An AI reads the emotional arc — three plain words you can correct — and paints it as a triptych while your words visibly dissolve into the pigment. Your painting then hangs in a shared 3D night-museum **beside strangers who felt the same**, matched on an 8-dimension emotion fingerprint, never on text. You can leave an anonymous light under a stranger's painting. Every visitor's feelings also feed one communal mural that has never existed before and will never exist again.
 
-**Visit the museum:** `https://YOUR-DEPLOYMENT.vercel.app` *(link goes live at submission — the magic is reachable in under 60 seconds: write three honest lines, watch them become paint)*
+**Visit the museum:** `https://museum-of-days.vercel.app` *(link goes live at submission — the magic is reachable in under 60 seconds: write three honest lines, watch them become paint)*
 
 **2-minute demo video:** `docs/demo/demo.mp4` *(recording pending)*
 
