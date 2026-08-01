@@ -34,30 +34,38 @@ export default function JournalScreen({ onArc, onCrisis, onResting }: {
       body: JSON.stringify({ text }),
     }).then(r => r.json()).catch(() => null)
     setBusy(false)
-    if (!res) return setGentle('the museum is far away tonight — try once more?')
+    if (!res) return setGentle('The museum is far away tonight — try once more?')
     if (res.status === 'crisis') return onCrisis()
     if (res.status === 'resting') return onResting()
-    if (res.status === 'limited') return setGentle('the museum asks you to rest a while — come back in an hour')
-    if (res.status === 'rejected') return setGentle("the museum couldn't hear that — try again?")
+    if (res.status === 'limited') return setGentle('The museum asks you to rest a while — come back in an hour.')
+    if (res.status === 'rejected') return setGentle("The museum couldn't hear that — try again?")
     onArc(res.beats, text)
   }
   return (
-    <section style={{ maxWidth: 560, margin: '18vh auto 0', padding: '0 1.2rem' }}>
-      <h1 style={{ fontWeight: 400, marginBottom: '1.4rem' }}>how was your day, really?</h1>
-      <textarea value={text} onChange={e => setText(e.target.value.slice(0, 600))} rows={6} autoFocus
-        style={{ width: '100%', background: 'transparent', color: 'var(--ink)', border: '1px solid #2a2822', padding: '1rem', font: 'inherit', fontSize: '1.05rem' }}
-        placeholder="no one will read this. not even us." />
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '.9rem', alignItems: 'center', gap: '.8rem' }}>
-        <span className="plaque">{gentle || `${text.length}/600`}</span>
+    <section style={{ maxWidth: 560, margin: '18vh auto 0', padding: '0 1.2rem', position: 'relative', zIndex: 2 }}>
+      <p className="reveal arch-note arch-note--accent">Field notes · entry for tonight</p>
+      <h1 className="reveal" style={{ fontSize: '2.1rem', marginTop: '.5rem' }}>How was your day, really?</h1>
+      <hr className="reveal label-rule" />
+      <div className="journal-sheet reveal delay-1">
+        <span className="journal-margin" aria-hidden />
+        <span className="journal-annot arch-note arch-note--faint" aria-hidden>three lines · unedited</span>
+        <textarea value={text} onChange={e => setText(e.target.value.slice(0, 600))} rows={6} autoFocus
+          className="journal-lines"
+          placeholder="No one will read this. Not even us." />
+      </div>
+      <div className="reveal delay-2" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '.9rem', alignItems: 'center', gap: '.8rem' }}>
+        <span className={gentle ? 'plaque' : 'arch-note'} style={{ opacity: gentle ? 1 : .8, transition: 'opacity var(--t-fast) var(--ease-soft)' }}>
+          {gentle || `${text.length} / 600 · in confidence`}
+        </span>
         {SR && (
-          <button onClick={toggleMic} aria-label="speak instead"
-            style={{ background: 'none', border: '1px solid #2a2822', color: listening ? 'var(--accent)' : 'var(--dim)', padding: '.55rem .9rem' }}>
-            {listening ? 'listening — tap to stop' : '🎙 speak'}
+          <button onClick={toggleMic} aria-label="Speak instead" className={listening ? 'listening' : undefined}
+            style={{ background: 'none', border: '1px solid var(--line)', color: listening ? 'var(--accent)' : 'var(--dim)', padding: '.55rem .9rem', borderRadius: 2 }}>
+            {listening ? 'Listening — tap to stop' : '🎙 Speak'}
           </button>
         )}
-        <button onClick={submit} disabled={busy || text.trim().length < 3}
+        <button onClick={submit} disabled={busy || text.trim().length < 3} className={busy ? 'breathing' : 'cta'}
           style={{ background: 'none', border: '1px solid var(--accent)', color: 'var(--accent)', padding: '.55rem 1.4rem' }}>
-          {busy ? 'listening…' : 'let it go'}
+          {busy ? 'Listening…' : 'Let it go'}
         </button>
       </div>
     </section>

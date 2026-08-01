@@ -1,0 +1,59 @@
+import { describe, it, expect } from 'vitest'
+import { paintingPrompt, communityPrompt } from '@/lib/prompt'
+import type { ArcBeat } from '@/lib/emotion'
+
+const beats: ArcBeat[] = [
+  { word: 'anxious', emotion: 'fear', intensity: 0.7 },
+  { word: 'lifted', emotion: 'joy', intensity: 0.6 },
+  { word: 'lonely', emotion: 'loneliness', intensity: 0.8 },
+]
+const palettes = [['#4b3a5e', '#2a2136'], ['#d9a441', '#f2d49b'], ['#3a4468', '#6b729a']]
+
+describe('paintingPrompt — one canvas for the whole evening', () => {
+  it('reads as a single canvas with three movements, not three panels', () => {
+    const p = paintingPrompt(beats, palettes).toLowerCase()
+    expect(p).toContain('single canvas')
+    expect(p).toContain('it opens with')
+    expect(p).toContain('it closes with')
+  })
+  it('translates every beat into mark-making and carries the palette hexes', () => {
+    const p = paintingPrompt(beats, palettes).toLowerCase()
+    expect(p).toContain('jagged fractured shards')       // fear
+    expect(p).toContain('buoyant upward sweeps')         // joy
+    expect(p).toContain('isolated mark')                 // loneliness
+    expect(p).toContain('#4b3a5e'); expect(p).toContain('#d9a441'); expect(p).toContain('#3a4468')
+  })
+  it('never names a feeling — feeling words make models paint portraits', () => {
+    const p = paintingPrompt(beats, palettes).toLowerCase()
+    for (const w of ['anxious', 'fear', 'joy', 'lonely', 'loneliness', 'lifted']) expect(p).not.toContain(w)
+  })
+  it('keeps the painterly and faceless constraints', () => {
+    const p = paintingPrompt(beats, palettes).toLowerCase()
+    expect(p).toMatch(/impasto|gouache|brush/); expect(p).toMatch(/no text/); expect(p).toMatch(/faceless/)
+  })
+})
+
+describe('communityPrompt — the monumental communal mural', () => {
+  const top = [
+    { emotion: 'calm' as const, weight: 0.4 },
+    { emotion: 'sadness' as const, weight: 0.3 },
+    { emotion: 'love' as const, weight: 0.2 },
+  ]
+  it('speaks at mural scale and weaves the top emotions as gestures', () => {
+    const p = communityPrompt(top, palettes).toLowerCase()
+    expect(p).toContain('monumental')
+    expect(p).toContain('wide still horizontal fields')  // calm leads
+    expect(p).toContain('heavy horizontal bands')        // sadness woven in
+    expect(p).toContain('two warm overlapping masses')   // love undertone
+  })
+  it('never names a feeling and stays faceless', () => {
+    const p = communityPrompt(top, palettes).toLowerCase()
+    for (const w of ['calm', 'sadness', 'love']) expect(p).not.toContain(w)
+    expect(p).toMatch(/faceless/)
+  })
+  it('survives a field with fewer than three emotions', () => {
+    const p = communityPrompt([top[0]], palettes).toLowerCase()
+    expect(p).toContain('wide still horizontal fields')
+    expect(p).not.toContain('undefined')
+  })
+})

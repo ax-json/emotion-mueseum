@@ -3,6 +3,9 @@ import { EMOTIONS, type ArcBeat, type Emotion, type EmotionVec } from '@/lib/emo
 
 export interface JournalAnalysis { beats: ArcBeat[]; crisis: boolean; abusive: boolean }
 
+// Google retires model ids without warning — pin here, override per-env if one dies mid-event.
+const TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || 'gemini-3.5-flash'
+
 export function blendVec(beats: ArcBeat[]): EmotionVec {
   const v = EMOTIONS.map(() => 0)
   for (const b of beats) v[EMOTIONS.indexOf(b.emotion)] += b.intensity / 3
@@ -34,7 +37,7 @@ export async function analyzeJournal(text: string): Promise<JournalAnalysis> {
   if (process.env.MOCK_AI === '1') return mockAnalysis(text)
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
   const res = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: TEXT_MODEL,
     contents: PROMPT + text,
     config: { responseMimeType: 'application/json', temperature: 0.4 },
   })

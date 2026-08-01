@@ -23,10 +23,14 @@ function PaintingCloud({ p, index }: { p: PaintingRow; index: number }) {
     }
     return arr
   }, [p.id, p.valence])
+  const grown = useRef(false)
   useFrame(({ clock }) => {
     const g = group.current; if (!g) return
-    const grow = Math.min(1, (performance.now() - born.current) / GROW_MS)
-    g.scale.setScalar(grow)
+    if (!grown.current) {                                            // scale only until it has grown
+      const grow = Math.min(1, (performance.now() - born.current) / GROW_MS)
+      g.scale.setScalar(grow)
+      if (grow >= 1) grown.current = true
+    }
     g.position.y = Math.sin(clock.elapsedTime * 0.6 + index) * 0.06   // slow communal breathing
   })
   const color = p.palette?.[1]?.[0] ?? '#7d8fa3'

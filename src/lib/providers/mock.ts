@@ -3,5 +3,5 @@ import type { ImageProvider } from './types'
 const PNG_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
 export const mockProvider: ImageProvider = {
   name: 'mock',
-  async generatePanel() { return Uint8Array.from(Buffer.from(PNG_B64, 'base64')) },
+  async generateImage() { return Uint8Array.from(Buffer.from(PNG_B64, 'base64')) },
 }
