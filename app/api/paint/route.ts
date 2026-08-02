@@ -58,10 +58,13 @@ export async function POST(req: NextRequest) {
     panel_urls: [url],                              // single canvas; '' => client renders ParticlePanel
     palette, session_hash: hash,
   }
+  const soloPainting = { ...row, id: 'local-' + Date.now(), lights: 0, is_seed: false, created_at: new Date().toISOString(), mine: true }
+
+  // No image, no wall: a failed generation stays a private solo painting (the visitor still
+  // sees their particle canvas) instead of hanging an empty filler frame in the museum.
+  if (!url) return NextResponse.json({ status: 'solo', painting: soloPainting })
+
   const ins = await db.from('paintings').insert(row).select().single()
-  if (ins.error) return NextResponse.json({
-    status: 'solo',
-    painting: { ...row, id: 'local-' + Date.now(), lights: 0, is_seed: false, created_at: new Date().toISOString(), mine: true },
-  })
+  if (ins.error) return NextResponse.json({ status: 'solo', painting: soloPainting })
   return NextResponse.json({ status: 'ok', painting: { ...ins.data, mine: true } })
 }

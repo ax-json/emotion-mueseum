@@ -114,7 +114,7 @@ export async function craftCommunityPrompt(
   const hexes = [...new Set(palettes.flat())].join(', ')
   const avoid = EMOTIONS.join(', ')
   return askPromptSmith(
-    `This is not one diary but the whole museum: the blended emotional field of every evening hung tonight, strongest first: ${field}.\n\nWrite the prompt for the museum's single monumental COMMUNITY MURAL — a vast composition layered like a hundred evenings torn and re-taped into one living portrait of the collective night. Palette accents available: ${hexes}.\n\nForbidden words — never write any of these (or words derived from them) in the prompt: ${avoid}`,
+    `This is not one diary but the whole museum: the blended emotional field of every evening hung tonight, strongest first: ${field}.\n\nWrite the prompt for the museum's single monumental COMMUNITY MURAL — a vast abstract composition layered like a hundred evenings torn and re-taped into one record of the collective night, on the house's near-black ground. It must stay a collage of corruption, botanical and celestial fragments — absolutely no human face, head, figure, silhouette or portrait of any kind, and the word portrait must not appear. Palette accents available: ${hexes}.\n\nForbidden words — never write any of these (or words derived from them) in the prompt: ${avoid}`,
     [],
   )
 }

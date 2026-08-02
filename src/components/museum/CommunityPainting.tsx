@@ -1,6 +1,5 @@
 'use client'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useEffect, useMemo, useState } from 'react'
 import { Text } from '@react-three/drei'
 import * as THREE from 'three'
 import { drawParticlePainting, seedFrom } from '@/components/particle-draw'
@@ -19,9 +18,6 @@ const PARTICLE_TEX_PX = 512
 function CommunityCanvas({ url, palette, arousal, seed, size }: {
   url: string; palette: string[]; arousal: number; seed: number; size: number
 }) {
-  const mat = useRef<THREE.MeshStandardMaterial>(null)
-  const reduced = useRef(false)
-  useEffect(() => { reduced.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches }, [])
   const [tex, setTex] = useState<THREE.Texture | null>(null)
   useEffect(() => {
     let disposed = false
@@ -49,18 +45,13 @@ function CommunityCanvas({ url, palette, arousal, seed, size }: {
     return () => { disposed = true; made?.dispose() }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url])
-  // the canvas breathes light, very slowly — the world's pulse made visible
-  useFrame(({ clock }) => {
-    if (reduced.current || !mat.current) return
-    // brighter baseline than private frames: the hero canvas must burn through 15m of fog
-    mat.current.emissiveIntensity = 0.55 + Math.sin(clock.elapsedTime * 0.45) * 0.09
-  })
   if (!tex) return null
   return (
     <mesh position={[0, 0, 0.03]}>
       <planeGeometry args={[size, size]} />
-      {/* fog exempt: 15m of amber fog was eating the hero canvas whole */}
-      <meshStandardMaterial ref={mat} map={tex} emissiveMap={tex} emissive="#ffffff" emissiveIntensity={0.55} roughness={0.85} fog={false} />
+      {/* unlit on purpose: under the hall's twin spotlights and amber shafts a lit material
+          washed the whole canvas out to a blank amber panel — the mural is a self-lit poster */}
+      <meshBasicMaterial map={tex} toneMapped={false} fog={false} />
     </mesh>
   )
 }
@@ -96,9 +87,9 @@ export default function CommunityPainting({ painting, night }: { painting: Paint
       </mesh>
       {/* twin spotlights raked from above, crossed like a stage */}
       <primitive object={spotTarget} position={[0, 0, 0]} />
-      <spotLight position={[-size * 0.8, size * 0.9, 2.6]} target={spotTarget} intensity={7}
+      <spotLight position={[-size * 0.8, size * 0.9, 2.6]} target={spotTarget} intensity={3.5}
         angle={0.42} penumbra={0.65} distance={16} decay={1.6} color="#ffe8c0" />
-      <spotLight position={[size * 0.8, size * 0.9, 2.6]} target={spotTarget} intensity={7}
+      <spotLight position={[size * 0.8, size * 0.9, 2.6]} target={spotTarget} intensity={3.5}
         angle={0.42} penumbra={0.65} distance={16} decay={1.6} color="#ffd9a0" />
       {!night.shell && (
         /* in the open nights a god-ray falls on it from the dark above */

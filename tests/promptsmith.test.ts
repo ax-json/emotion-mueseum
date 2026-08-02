@@ -92,6 +92,7 @@ describe('craftCommunityPrompt', () => {
     const msgs = s.body.messages as { role: string; content: string }[]
     expect(msgs[1].content).toContain('loneliness')
     expect(msgs[1].content.toLowerCase()).toContain('mural')
+    expect(msgs[1].content.toLowerCase().includes('living portrait')).toBe(false)   // 'portrait' in the ask painted literal faces
   })
   it('returns null without a key so the deterministic mural builder takes over', async () => {
     delete process.env.OPENAI_API_KEY
