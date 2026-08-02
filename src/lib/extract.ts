@@ -1,10 +1,14 @@
-import { GoogleGenAI } from '@google/genai'
 import { EMOTIONS, type ArcBeat, type Emotion, type EmotionVec } from '@/lib/emotion'
 
 export interface JournalAnalysis { beats: ArcBeat[]; crisis: boolean; abusive: boolean }
 
-// Google retires model ids without warning — pin here, override per-env if one dies mid-event.
-const TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || 'gemini-3.5-flash'
+/* ChatGPT as the museum's professional reader: it hears the diary entry (request scope only —
+   never logged, never stored) and names the three-beat emotional arc of the day. Throws on any
+   failure so the journal route can fall back to the deterministic keyword reading. */
+
+const OPENAI_ENDPOINT = 'https://api.openai.com/v1/chat/completions'
+const MODEL = () => process.env.OPENAI_MODEL || 'gpt-4o-mini'   // pin + override, same policy as promptsmith
+const TIMEOUT_MS = 12_000
 
 export function blendVec(beats: ArcBeat[]): EmotionVec {
   const v = EMOTIONS.map(() => 0)
@@ -12,14 +16,12 @@ export function blendVec(beats: ArcBeat[]): EmotionVec {
   return v.map(x => Math.min(1, x))
 }
 
-const PROMPT = `You analyze one private journal entry about someone's day. Reply with STRICT JSON only:
+const SYSTEM = `You analyze one private journal entry about someone's day. Reply with STRICT JSON only:
 {"beats":[{"word":string,"emotion":string,"intensity":number},{...},{...}],"crisis":boolean,"abusive":boolean}
 Rules: exactly 3 beats = the emotional arc in chronological order (beginning, middle, end of the day).
 "word": ONE lowercase feeling word in the writer's own register. "emotion": exactly one of ${EMOTIONS.join(', ')}.
 "intensity": 0..1. "crisis": true only if the entry signals self-harm or suicide risk.
-"abusive": true only if the entry is hate speech, slurs, or spam unrelated to feelings.
-Entry:
-`
+"abusive": true only if the entry is hate speech, slurs, or spam unrelated to feelings.`
 
 function mockAnalysis(text: string): JournalAnalysis {
   return {
@@ -35,13 +37,28 @@ function mockAnalysis(text: string): JournalAnalysis {
 
 export async function analyzeJournal(text: string): Promise<JournalAnalysis> {
   if (process.env.MOCK_AI === '1') return mockAnalysis(text)
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
-  const res = await ai.models.generateContent({
-    model: TEXT_MODEL,
-    contents: PROMPT + text,
-    config: { responseMimeType: 'application/json', temperature: 0.4 },
+  const key = process.env.OPENAI_API_KEY
+  if (!key) throw new Error('[extract] OPENAI_API_KEY missing')
+
+  const res = await fetch(OPENAI_ENDPOINT, {
+    method: 'POST',
+    signal: AbortSignal.timeout(TIMEOUT_MS),      // a hung OpenAI must not hold the reading hostage
+    headers: { Authorization: `Bearer ${key}`, 'content-type': 'application/json' },
+    body: JSON.stringify({
+      model: MODEL(),
+      messages: [
+        { role: 'system', content: SYSTEM },
+        { role: 'user', content: `Entry:\n${text}` },
+      ],
+      temperature: 0.4,
+      max_tokens: 300,
+      response_format: { type: 'json_object' },
+    }),
   })
-  const raw = JSON.parse(res.text ?? '{}')
+  if (!res.ok) throw new Error(`[extract] openai ${res.status}: ${(await res.text()).slice(0, 200)}`)
+
+  const content = (await res.json())?.choices?.[0]?.message?.content
+  const raw = JSON.parse(typeof content === 'string' ? content : '{}')
   const beats: ArcBeat[] = (raw.beats ?? []).slice(0, 3).map((b: Record<string, unknown>) => ({
     word: String(b.word ?? 'quiet').toLowerCase().slice(0, 24),
     emotion: (EMOTIONS as readonly string[]).includes(String(b.emotion)) ? (b.emotion as Emotion) : 'calm',
