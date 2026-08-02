@@ -2,38 +2,43 @@ import { NextResponse } from 'next/server'
 import { paletteFor, valence, arousal, type EmotionVec } from '@/lib/emotion'
 import { COMMUNITY_SESSION, meanVec, topEmotions } from '@/lib/community'
 import { communityPrompt } from '@/lib/prompt'
+import { craftCommunityPrompt } from '@/lib/promptsmith'
 import { getProvider } from '@/lib/providers'
 import { serverDb } from '@/lib/supabase'
 
-/* The museum's one communal canvas: the mean emotion of every evening hung here, repainted
-   when it grows stale. Clients nudge this endpoint fire-and-forget after a new painting and
-   on museum entry.
+/* The museum's one communal canvas: a LIVING PORTRAIT — the mean emotion of every evening
+   hung here, repainted whenever a new diary entry arrives. Clients nudge this endpoint
+   fire-and-forget after a new painting and on museum entry; the gate below repaints only
+   when a visitor painting is newer than the mural, so each new entry changes the portrait
+   exactly once and idle nudges are free.
 
    Concurrency and abuse share one defence: an ATOMIC claim. The regeneration is gated by a
-   conditional UPDATE that bumps created_at only while it is still older than the staleness
-   window — exactly one concurrent caller wins the row, every loser returns immediately, and
-   an anonymous curl loop can trigger at most one paid generation per window. The canvas row
-   is then updated IN PLACE (same id, no delete/insert), so there is no sweep to race, no
-   lights_log FK to trip, and a failed generation simply leaves the previous painting hanging. */
+   conditional UPDATE that bumps created_at forward only while the mural is still older than
+   the newest visitor painting — exactly one concurrent caller wins the row, every loser
+   returns immediately, and an anonymous curl loop without new entries never triggers a
+   generation (entries themselves are rate-limited). The canvas row is then updated IN PLACE
+   (same id, no delete/insert), so there is no sweep to race, no lights_log FK to trip, and
+   a failed generation simply leaves the previous painting hanging. */
 
 const SAMPLE_SIZE = 500
-const REFRESH_MIN = () => Number(process.env.COMMUNITY_REFRESH_MIN ?? 15)
 
 export async function POST() {
   const db = serverDb()
-  const cutoff = new Date(Date.now() - REFRESH_MIN() * 60_000).toISOString()
 
   // a failed read must NOT read as "no canvas yet" — that would disarm the keep-previous guard
   const existing = await db.from('paintings').select('id, created_at, panel_urls')
     .eq('session_hash', COMMUNITY_SESSION).order('created_at', { ascending: false }).limit(1)
   if (existing.error) return NextResponse.json({ ok: false, reason: 'read failed' })
   const current = existing.data?.[0]
-  if (current && current.created_at >= cutoff) return NextResponse.json({ ok: true, fresh: true })
 
-  const sample = await db.from('paintings').select('emotion_vec')
+  const sample = await db.from('paintings').select('emotion_vec, created_at')
     .neq('session_hash', COMMUNITY_SESSION).order('created_at', { ascending: false }).limit(SAMPLE_SIZE)
   const vecs = (sample.data ?? []).map(r => r.emotion_vec as EmotionVec).filter(v => Array.isArray(v))
   if (!vecs.length) return NextResponse.json({ ok: false, reason: 'no paintings yet' })
+
+  // the living-portrait gate: repaint only when an entry arrived after the mural's last coat
+  const newestEntryAt = sample.data?.[0]?.created_at ?? ''
+  if (current && current.created_at >= newestEntryAt) return NextResponse.json({ ok: true, fresh: true })
 
   const vec = meanVec(vecs)
   const top = topEmotions(vec, 3)
@@ -46,9 +51,9 @@ export async function POST() {
   let claimId: string
   let previousUrl = ''
   if (current) {
-    // the atomic claim: bump created_at forward only while it is still stale
+    // the atomic claim: bump created_at forward only while it is still older than the newest entry
     const claim = await db.from('paintings').update({ created_at: new Date().toISOString() })
-      .eq('id', current.id).lt('created_at', cutoff).select('id')
+      .eq('id', current.id).lt('created_at', newestEntryAt).select('id')
     if (claim.error || !claim.data?.length) return NextResponse.json({ ok: true, fresh: true })
     claimId = current.id
     previousUrl = current.panel_urls?.[0] ?? ''
@@ -68,7 +73,10 @@ export async function POST() {
 
   let url = ''
   try {
-    const bytes = await getProvider().generateImage({ prompt: communityPrompt(top, palette) })
+    // ChatGPT writes the mural prompt from the collective field; the deterministic
+    // builder is the safety net so a repaint never depends on a second AI call succeeding.
+    const crafted = await craftCommunityPrompt(top, palette)
+    const bytes = await getProvider().generateImage({ prompt: crafted ?? communityPrompt(top, palette) })
     const up = await db.storage.from('panels').upload(`community-${crypto.randomUUID()}.png`, bytes, { contentType: 'image/png' })
       .then(r => ({ error: r.error, path: r.data?.path }))
       .catch(() => ({ error: true as const, path: undefined }))

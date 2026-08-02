@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { craftPaintingPrompt } from '@/lib/promptsmith'
+import { craftPaintingPrompt, craftCommunityPrompt } from '@/lib/promptsmith'
 import type { ArcBeat } from '@/lib/emotion'
 
 const beats: ArcBeat[] = [
@@ -72,5 +72,33 @@ describe('craftPaintingPrompt', () => {
   it('returns null on unusably short output', async () => {
     stubOpenAI('nice painting')
     expect(await craftPaintingPrompt('a day', beats)).toBeNull()
+  })
+})
+
+describe('craftCommunityPrompt', () => {
+  const top = [
+    { emotion: 'loneliness' as const, weight: 0.4 },
+    { emotion: 'fear' as const, weight: 0.3 },
+    { emotion: 'joy' as const, weight: 0.2 },
+  ]
+  const palettes = [['#223', '#445'], ['#667', '#889']]
+
+  it('asks chat completions for a mural prompt naming the collective field', async () => {
+    const seen = stubOpenAI(GOOD_PROMPT)
+    const out = await craftCommunityPrompt(top, palettes)
+    expect(out).toBe(GOOD_PROMPT)
+    const s = seen()!
+    expect(s.url).toContain('api.openai.com/v1/chat/completions')
+    const msgs = s.body.messages as { role: string; content: string }[]
+    expect(msgs[1].content).toContain('loneliness')
+    expect(msgs[1].content.toLowerCase()).toContain('mural')
+  })
+  it('returns null without a key so the deterministic mural builder takes over', async () => {
+    delete process.env.OPENAI_API_KEY
+    expect(await craftCommunityPrompt(top, palettes)).toBeNull()
+  })
+  it('rejects mural prompts that name a feeling', async () => {
+    stubOpenAI(GOOD_PROMPT.replace('jagged violet shards', 'a lonely fearful storm'))
+    expect(await craftCommunityPrompt(top, palettes)).toBeNull()
   })
 })

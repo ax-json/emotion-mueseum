@@ -1,4 +1,4 @@
-import { EMOTIONS, type ArcBeat } from '@/lib/emotion'
+import { EMOTIONS, type ArcBeat, type Emotion } from '@/lib/emotion'
 
 /* ChatGPT as the museum's prompt-smith: it reads the diary entry (request scope only — never
    logged, never stored) and writes the one painting prompt Higgsfield will receive. The image
@@ -56,15 +56,10 @@ function echoesDiary(prompt: string, diary: string): boolean {
   return false
 }
 
-export async function craftPaintingPrompt(text: string, beats: ArcBeat[]): Promise<string | null> {
+async function askPromptSmith(userMessage: string, beats: ArcBeat[]): Promise<string | null> {
   if (process.env.MOCK_AI === '1') return null                  // tests/E2E stay deterministic
   const key = process.env.OPENAI_API_KEY
   if (!key) { console.warn('[promptsmith] OPENAI_API_KEY missing — using local prompt builder'); return null }
-
-  const arc = beats.map(b => `${b.word} (${b.emotion}, ${b.intensity.toFixed(2)})`).join(' → ')
-  // The guard below rejects any output containing these — telling the model up front
-  // roughly halves the rejection rate (both live smokes died on a named feeling).
-  const avoid = [...new Set([...EMOTIONS, ...beats.map(b => b.word.toLowerCase())])].join(', ')
   try {
     const res = await fetch(OPENAI_ENDPOINT, {
       method: 'POST',
@@ -74,7 +69,7 @@ export async function craftPaintingPrompt(text: string, beats: ArcBeat[]): Promi
         model: MODEL(),
         messages: [
           { role: 'system', content: SYSTEM },
-          { role: 'user', content: `Diary entry:\n${text}\n\nEmotional arc of the day: ${arc}\n\nForbidden words — never write any of these (or words derived from them) in the prompt: ${avoid}` },
+          { role: 'user', content: userMessage },
         ],
         temperature: 0.8,
         max_tokens: 260,
@@ -88,10 +83,38 @@ export async function craftPaintingPrompt(text: string, beats: ArcBeat[]): Promi
     const prompt = typeof raw === 'string' ? raw.trim().replace(/^["'`]+|["'`]+$/g, '').slice(0, MAX_PROMPT_CHARS) : ''
     if (prompt.length < MIN_USABLE_CHARS) { console.warn('[promptsmith] unusably short output'); return null }
     if (violates(prompt, beats)) { console.warn('[promptsmith] output named a feeling — using local builder'); return null }
-    if (echoesDiary(prompt, text)) { console.warn('[promptsmith] output echoed the diary — using local builder'); return null }
     return prompt
   } catch (e) {
     console.warn('[promptsmith] openai unreachable:', e instanceof Error ? e.message : e)
     return null
   }
+}
+
+export async function craftPaintingPrompt(text: string, beats: ArcBeat[]): Promise<string | null> {
+  const arc = beats.map(b => `${b.word} (${b.emotion}, ${b.intensity.toFixed(2)})`).join(' → ')
+  // The guard below rejects any output containing these — telling the model up front
+  // roughly halves the rejection rate (both live smokes died on a named feeling).
+  const avoid = [...new Set([...EMOTIONS, ...beats.map(b => b.word.toLowerCase())])].join(', ')
+  const prompt = await askPromptSmith(
+    `Diary entry:\n${text}\n\nEmotional arc of the day: ${arc}\n\nForbidden words — never write any of these (or words derived from them) in the prompt: ${avoid}`,
+    beats,
+  )
+  if (prompt && echoesDiary(prompt, text)) { console.warn('[promptsmith] output echoed the diary — using local builder'); return null }
+  return prompt
+}
+
+/* The community mural through the same smith: no single diary here, so ChatGPT reads the
+   museum's mean emotional field instead and writes one monumental mural prompt in the same
+   house style. Null on any failure — the deterministic communityPrompt builder takes over. */
+export async function craftCommunityPrompt(
+  top: { emotion: Emotion; weight: number }[],
+  palettes: string[][],
+): Promise<string | null> {
+  const field = top.map(t => `${t.emotion} (weight ${t.weight.toFixed(2)})`).join(', ')
+  const hexes = [...new Set(palettes.flat())].join(', ')
+  const avoid = EMOTIONS.join(', ')
+  return askPromptSmith(
+    `This is not one diary but the whole museum: the blended emotional field of every evening hung tonight, strongest first: ${field}.\n\nWrite the prompt for the museum's single monumental COMMUNITY MURAL — a vast composition layered like a hundred evenings torn and re-taped into one living portrait of the collective night. Palette accents available: ${hexes}.\n\nForbidden words — never write any of these (or words derived from them) in the prompt: ${avoid}`,
+    [],
+  )
 }
